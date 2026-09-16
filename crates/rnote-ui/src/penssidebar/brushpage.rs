@@ -2,13 +2,15 @@
 use crate::{RnAppWindow, RnStrokeWidthPicker};
 use adw::prelude::*;
 use gtk4::{
-    Button, CompositeTemplate, ListBox, MenuButton, Popover, Widget, glib, glib::clone,
+    Button, CompositeTemplate, ListBox, MenuButton, Popover, Widget, gdk, glib, glib::clone,
     subclass::prelude::*,
 };
 use num_traits::cast::ToPrimitive;
+use rnote_compose::Color;
 use rnote_compose::builders::PenPathBuilderType;
 use rnote_compose::style::PressureCurve;
 use rnote_compose::style::textured::{TexturedDotsDistribution, TexturedOptions};
+use rnote_engine::ext::GdkRGBAExt;
 use rnote_engine::pens::pensconfig::BrushConfig;
 use rnote_engine::pens::pensconfig::brushconfig::{BrushStyle, SolidOptions};
 
@@ -290,6 +292,23 @@ impl RnBrushPage {
 
                 match brush_style {
                     BrushStyle::Marker => {
+                        let (stroke_color, fill_color) = {
+                            let brush_config = appwindow.engine_config().read();
+                            (
+                                brush_config
+                                    .pens_config
+                                    .brush_config
+                                    .marker_options
+                                    .stroke_color
+                                    .unwrap_or(Color::TRANSPARENT),
+                                brush_config
+                                    .pens_config
+                                    .brush_config
+                                    .marker_options
+                                    .fill_color
+                                    .unwrap_or(Color::TRANSPARENT),
+                            )
+                        };
                         let stroke_width = appwindow
                             .engine_config()
                             .read()
@@ -301,12 +320,37 @@ impl RnBrushPage {
                             .imp()
                             .stroke_width_picker
                             .set_stroke_width(stroke_width);
+                        appwindow
+                            .overlays()
+                            .colorpicker()
+                            .set_stroke_color(gdk::RGBA::from_compose_color(stroke_color));
+                        appwindow
+                            .overlays()
+                            .colorpicker()
+                            .set_fill_color(gdk::RGBA::from_compose_color(fill_color));
                         brushpage
                             .imp()
                             .brushstyle_menubutton
                             .set_icon_name("pen-brush-style-marker-symbolic");
                     }
                     BrushStyle::Solid => {
+                        let (stroke_color, fill_color) = {
+                            let brush_config = appwindow.engine_config().read();
+                            (
+                                brush_config
+                                    .pens_config
+                                    .brush_config
+                                    .solid_options
+                                    .stroke_color
+                                    .unwrap_or(Color::TRANSPARENT),
+                                brush_config
+                                    .pens_config
+                                    .brush_config
+                                    .solid_options
+                                    .fill_color
+                                    .unwrap_or(Color::TRANSPARENT),
+                            )
+                        };
                         let stroke_width = appwindow
                             .engine_config()
                             .read()
@@ -318,12 +362,29 @@ impl RnBrushPage {
                             .imp()
                             .stroke_width_picker
                             .set_stroke_width(stroke_width);
+                        appwindow
+                            .overlays()
+                            .colorpicker()
+                            .set_stroke_color(gdk::RGBA::from_compose_color(stroke_color));
+                        appwindow
+                            .overlays()
+                            .colorpicker()
+                            .set_fill_color(gdk::RGBA::from_compose_color(fill_color));
                         brushpage
                             .imp()
                             .brushstyle_menubutton
                             .set_icon_name("pen-brush-style-solid-symbolic");
                     }
                     BrushStyle::Textured => {
+                        let stroke_color = {
+                            let brush_config = appwindow.engine_config().read();
+                            brush_config
+                                .pens_config
+                                .brush_config
+                                .textured_options
+                                .stroke_color
+                                .unwrap_or(Color::TRANSPARENT)
+                        };
                         let stroke_width = appwindow
                             .engine_config()
                             .read()
@@ -335,6 +396,10 @@ impl RnBrushPage {
                             .imp()
                             .stroke_width_picker
                             .set_stroke_width(stroke_width);
+                        appwindow
+                            .overlays()
+                            .colorpicker()
+                            .set_stroke_color(gdk::RGBA::from_compose_color(stroke_color));
                         brushpage
                             .imp()
                             .brushstyle_menubutton

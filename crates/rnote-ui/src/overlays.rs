@@ -9,6 +9,7 @@ use gtk4::{
 };
 use rnote_engine::ext::GdkRGBAExt;
 use rnote_engine::pens::PenStyle;
+use rnote_engine::pens::pensconfig::brushconfig::BrushStyle;
 use std::cell::{Cell, RefCell};
 use tracing::error;
 
@@ -182,12 +183,36 @@ impl RnOverlays {
                         }
                     }
 
-                    // We have a global colorpicker, so we apply it to all styles
-                    appwindow
-                        .engine_config()
-                        .write()
-                        .pens_config
-                        .set_all_stroke_colors(stroke_color);
+                    let mut engine_config = appwindow.engine_config().write();
+                    match current_pen_style {
+                        PenStyle::Brush => match engine_config.pens_config.brush_config.style {
+                            BrushStyle::Marker => {
+                                engine_config
+                                    .pens_config
+                                    .brush_config
+                                    .marker_options
+                                    .stroke_color = Some(stroke_color);
+                            }
+                            BrushStyle::Solid => {
+                                engine_config
+                                    .pens_config
+                                    .brush_config
+                                    .solid_options
+                                    .stroke_color = Some(stroke_color);
+                            }
+                            BrushStyle::Textured => {
+                                engine_config
+                                    .pens_config
+                                    .brush_config
+                                    .textured_options
+                                    .stroke_color = Some(stroke_color);
+                            }
+                        },
+                        PenStyle::Shaper | PenStyle::Typewriter => {
+                            engine_config.pens_config.set_all_stroke_colors(stroke_color);
+                        }
+                        PenStyle::Selector | PenStyle::Eraser | PenStyle::Tools => {}
+                    }
                 }
             ),
         );
@@ -217,12 +242,30 @@ impl RnOverlays {
                         | PenStyle::Tools => {}
                     }
 
-                    // We have a global colorpicker, so we apply it to all styles
-                    appwindow
-                        .engine_config()
-                        .write()
-                        .pens_config
-                        .set_all_fill_colors(fill_color);
+                    let mut engine_config = appwindow.engine_config().write();
+                    match stroke_style {
+                        PenStyle::Brush => match engine_config.pens_config.brush_config.style {
+                            BrushStyle::Marker => {
+                                engine_config
+                                    .pens_config
+                                    .brush_config
+                                    .marker_options
+                                    .fill_color = Some(fill_color);
+                            }
+                            BrushStyle::Solid => {
+                                engine_config
+                                    .pens_config
+                                    .brush_config
+                                    .solid_options
+                                    .fill_color = Some(fill_color);
+                            }
+                            BrushStyle::Textured => {}
+                        },
+                        PenStyle::Shaper | PenStyle::Selector => {
+                            engine_config.pens_config.set_all_fill_colors(fill_color);
+                        }
+                        PenStyle::Typewriter | PenStyle::Eraser | PenStyle::Tools => {}
+                    }
                 }
             ),
         );
