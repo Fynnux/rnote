@@ -162,7 +162,7 @@ mod imp {
             let css = CssProvider::new();
 
             self.name_label
-                .set_label(name.graphemes(true).take(2).collect::<String>().as_str());
+                .set_label(name.graphemes(true).take(3).collect::<String>().as_str());
             self.obj()
                 .set_tooltip_text(Some(format!("{name}\n{dir}").as_str()));
 
